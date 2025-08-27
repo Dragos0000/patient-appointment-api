@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from src.adapters.database.tables import patients_table, appointments_table
 from src.adapters.database.patient_adapter import PatientDatabaseAdapter
 from src.adapters.database.appointment_adapter import AppointmentDatabaseAdapter
+from src.services.appointment_service import AppointmentBusinessService
 from src.models.patient import Patient, PatientCreate, PatientUpdate
 from src.models.appointment import Appointment, AppointmentCreate, AppointmentUpdate, AppointmentStatus
 
@@ -63,6 +64,12 @@ def patient_adapter(mock_connection):
 def appointment_adapter(mock_connection):
     """Create appointment adapter with mock connection."""
     return AppointmentDatabaseAdapter(mock_connection)
+
+
+@pytest.fixture
+def appointment_service(mock_connection):
+    """Create appointment business service with mock connection."""
+    return AppointmentBusinessService(mock_connection)
 
 
 # Patient test data fixtures
@@ -125,7 +132,32 @@ def sample_appointment_create(sample_appointment_create_data):
     return AppointmentCreate(**sample_appointment_create_data)
 
 
+# Business service test fixtures
 @pytest.fixture
-def sample_appointment(sample_appointment_data):
-    """Sample Appointment model."""
-    return Appointment(**sample_appointment_data)
+def sample_appointment():
+    """Sample appointment for testing."""
+    return Appointment(
+        id="test-appointment-id",
+        patient="9434765919",
+        status=AppointmentStatus.SCHEDULED,
+        time=datetime(2024, 1, 15, 10, 0),
+        duration="1h",
+        clinician="Dr. Smith",
+        department="cardiology",
+        postcode="SW1A 1AA"
+    )
+
+
+@pytest.fixture
+def cancelled_appointment():
+    """Sample cancelled appointment for testing."""
+    return Appointment(
+        id="cancelled-appointment-id",
+        patient="9434765919",
+        status=AppointmentStatus.CANCELLED,
+        time=datetime(2024, 1, 15, 10, 0),
+        duration="1h",
+        clinician="Dr. Smith",
+        department="cardiology",
+        postcode="SW1A 1AA"
+    )

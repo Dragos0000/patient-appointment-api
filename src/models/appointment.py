@@ -16,6 +16,24 @@ class AppointmentStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+def validate_status_transition(current_status: Optional[AppointmentStatus], new_status: AppointmentStatus) -> bool:
+    """
+    Validate if a status transition is allowed.
+    Returns:
+        True if transition is valid, False otherwise
+    """
+    if current_status is None:
+        # New appointment - any initial status is allowed
+        return True
+    
+    if current_status == AppointmentStatus.CANCELLED and new_status != AppointmentStatus.CANCELLED:
+        # Cannot reinstate cancelled appointments
+        return False
+    
+    # All other transitions are allowed
+    return True
+
+
 class AppointmentBase(BaseModel):
     """Base appointment model"""
     
@@ -29,7 +47,6 @@ class AppointmentBase(BaseModel):
     postcode: str = Field(..., description="Postcode for the appointment location")
 
     class Config:
-        from_attributes = True  # For SQLAlchemy compatibility
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
@@ -123,6 +140,14 @@ class AppointmentUpdate(BaseModel):
     clinician: Optional[str] = Field(None, description="Name of the clinician")
     department: Optional[str] = Field(None, description="Department name")
     postcode: Optional[str] = Field(None, description="Postcode for the appointment location")
+    
+    def validate_status_transition(self, current_status: Optional[AppointmentStatus]) -> None:
+        """
+        Validate status transition if status is being updated.
+        """
+        if self.status is not None:
+            if not validate_status_transition(current_status, self.status):
+                raise ValueError(f"Invalid status transition from {current_status} to {self.status}: Cancelled appointments cannot be reinstated")
 
     @validator('duration')
     def validate_duration_format(cls, v):
@@ -139,7 +164,7 @@ class AppointmentUpdate(BaseModel):
         
         hours, minutes = match.groups()
         
-        # At least one of hours or minutes must be specified
+
         if not hours and not minutes:
             raise ValueError('Duration must specify at least hours or minutes')
         
