@@ -1,6 +1,6 @@
 import os
 from typing import AsyncGenerator
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncConnection
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
@@ -11,7 +11,6 @@ class DatabaseSettings(BaseSettings):
     """Database configuration settings."""
     
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./patient_appointments.db")
-    DATABASE_URL_SYNC: str = os.getenv("DATABASE_URL_SYNC", "sqlite:///./patient_appointments.db")
     DB_ECHO: bool = os.getenv("DB_ECHO", "false").lower() in ("true", "1", "yes", "on")
 
 
@@ -25,12 +24,6 @@ async_engine = create_async_engine(
     future=True
 )
 
-# Sync Database engine for migrations (Alembic)
-sync_engine = create_engine(
-    settings.DATABASE_URL_SYNC,
-    echo=settings.DB_ECHO,
-    future=True
-)
 
 # Metadata for table definitions
 metadata = MetaData()
