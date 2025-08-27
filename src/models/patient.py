@@ -3,7 +3,8 @@
 from datetime import date
 from typing import Optional
 from pydantic import BaseModel, Field, validator
-import re
+
+from utils.validators import format_nhs_number, format_uk_postcode
 
 
 class PatientBase(BaseModel):
@@ -22,29 +23,27 @@ class PatientBase(BaseModel):
 
     @validator('nhs_number')
     def validate_nhs_number(cls, v):
-        """Validate NHS number format."""
+        """Validate and format NHS number with checksum validation."""
         if not v:
             raise ValueError('NHS number is required')
         
-        # Remove spaces and validate format - keep as 10 digits without formatting
-        nhs_clean = v.replace(' ', '')
-        if not re.match(r'^\d{10}$', nhs_clean):
-            raise ValueError('NHS number must be 10 digits')
+        formatted_nhs = format_nhs_number(v)
+        if formatted_nhs is None:
+            raise ValueError('Invalid NHS number: must be 10 digits with valid checksum')
         
-        return nhs_clean
+        return formatted_nhs
 
     @validator('postcode')
     def validate_postcode(cls, v):
-        """Validate UK postcode format."""
+        """Validate and format UK postcode."""
         if not v:
             raise ValueError('Postcode is required')
         
-        # Basic UK postcode validation
-        postcode_pattern = r'^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$'
-        if not re.match(postcode_pattern, v.upper()):
+        formatted_postcode = format_uk_postcode(v)
+        if formatted_postcode is None:
             raise ValueError('Invalid UK postcode format')
         
-        return v.upper()
+        return formatted_postcode
 
 
 class PatientCreate(PatientBase):
@@ -62,29 +61,27 @@ class PatientUpdate(BaseModel):
 
     @validator('nhs_number')
     def validate_nhs_number(cls, v):
-        """Validate NHS number format."""
+        """Validate and format NHS number with checksum validation."""
         if v is None:
             return v
         
-        # Remove spaces and validate format - keep as 10 digits without formatting
-        nhs_clean = v.replace(' ', '')
-        if not re.match(r'^\d{10}$', nhs_clean):
-            raise ValueError('NHS number must be 10 digits')
+        formatted_nhs = format_nhs_number(v)
+        if formatted_nhs is None:
+            raise ValueError('Invalid NHS number: must be 10 digits with valid checksum')
         
-        return nhs_clean
+        return formatted_nhs
 
     @validator('postcode')
     def validate_postcode(cls, v):
-        """Validate UK postcode format."""
+        """Validate and format UK postcode."""
         if v is None:
             return v
         
-        # Basic UK postcode validation
-        postcode_pattern = r'^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$'
-        if not re.match(postcode_pattern, v.upper()):
+        formatted_postcode = format_uk_postcode(v)
+        if formatted_postcode is None:
             raise ValueError('Invalid UK postcode format')
         
-        return v.upper()
+        return formatted_postcode
 
 
 

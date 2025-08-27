@@ -70,7 +70,7 @@ def appointment_adapter(mock_connection):
 def sample_patient_data():
     """Sample patient data for testing."""
     return {
-        "nhs_number": "1234567890",
+        "nhs_number": "9434765919",  # Valid NHS number with correct checksum
         "name": "John Doe",
         "date_of_birth": date(1990, 1, 15),
         "postcode": "SW1A 1AA"

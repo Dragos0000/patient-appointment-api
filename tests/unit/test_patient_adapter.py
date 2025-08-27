@@ -35,7 +35,7 @@ async def test_get_patient_by_nhs_number_found(patient_adapter, mock_connection,
     mock_result.fetchone.return_value = mock_row
     mock_connection.execute = AsyncMock(return_value=mock_result)
     
-    result = await patient_adapter.get_patient_by_nhs_number("1234567890")
+    result = await patient_adapter.get_patient_by_nhs_number("9434765919")
     
  
     assert isinstance(result, Patient)
@@ -65,7 +65,7 @@ async def test_get_all_patients(patient_adapter, mock_connection, sample_patient
     mock_row2 = MagicMock()
     mock_row2._asdict.return_value = {
         **sample_patient_data,
-        "nhs_number": "0987654321",
+        "nhs_number": "9434765870",  # Another valid NHS number
         "name": "Jane Smith"
     }
     
@@ -77,8 +77,8 @@ async def test_get_all_patients(patient_adapter, mock_connection, sample_patient
     
     assert len(result) == 2
     assert all(isinstance(patient, Patient) for patient in result)
-    assert result[0].nhs_number == "1234567890"
-    assert result[1].nhs_number == "0987654321"
+    assert result[0].nhs_number == "9434765919"
+    assert result[1].nhs_number == "9434765870"
     mock_connection.execute.assert_called_once()
 
 
@@ -110,7 +110,7 @@ async def test_update_patient_success(patient_adapter, mock_connection, sample_p
     mock_connection.execute = AsyncMock(side_effect=[mock_update_result, mock_get_result])
     
     update_data = PatientUpdate(name="John Updated")
-    result = await patient_adapter.update_patient("1234567890", update_data)
+    result = await patient_adapter.update_patient("9434765919", update_data)
     
     assert isinstance(result, Patient)
     assert result.name == "John Updated"
@@ -141,7 +141,7 @@ async def test_update_patient_no_changes(patient_adapter, mock_connection, sampl
     mock_connection.execute = AsyncMock(return_value=mock_result)
     
     update_data = PatientUpdate()  # No fields set
-    result = await patient_adapter.update_patient("1234567890", update_data)
+    result = await patient_adapter.update_patient("9434765919", update_data)
     
     assert isinstance(result, Patient)
     assert result.nhs_number == sample_patient_data["nhs_number"]
@@ -155,7 +155,7 @@ async def test_delete_patient_success(patient_adapter, mock_connection):
     mock_result.rowcount = 1
     mock_connection.execute = AsyncMock(return_value=mock_result)
     
-    result = await patient_adapter.delete_patient("1234567890")
+    result = await patient_adapter.delete_patient("9434765919")
     
     assert result is True
     mock_connection.execute.assert_called_once()
@@ -182,7 +182,7 @@ async def test_patient_exists_true(patient_adapter, mock_connection):
     mock_result.fetchone.return_value = mock_row
     mock_connection.execute = AsyncMock(return_value=mock_result)
     
-    result = await patient_adapter.patient_exists("1234567890")
+    result = await patient_adapter.patient_exists("9434765919")
     
     assert result is True
     mock_connection.execute.assert_called_once()

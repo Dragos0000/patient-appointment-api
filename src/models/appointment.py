@@ -4,6 +4,8 @@ from pydantic import BaseModel, Field, validator
 from enum import Enum
 import re
 
+from utils.validators import format_uk_postcode
+
 
 class AppointmentStatus(str, Enum):
     """Appointment status"""
@@ -55,16 +57,15 @@ class AppointmentBase(BaseModel):
 
     @validator('postcode')
     def validate_postcode(cls, v):
-        """Validate UK postcode format."""
+        """Validate and format UK postcode."""
         if not v:
             raise ValueError('Postcode is required')
         
-        # Basic UK postcode validation
-        postcode_pattern = r'^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$'
-        if not re.match(postcode_pattern, v.upper()):
+        formatted_postcode = format_uk_postcode(v)
+        if formatted_postcode is None:
             raise ValueError('Invalid UK postcode format')
         
-        return v.upper()
+        return formatted_postcode
 
 
 class AppointmentCreate(BaseModel):
@@ -101,16 +102,15 @@ class AppointmentCreate(BaseModel):
 
     @validator('postcode')
     def validate_postcode(cls, v):
-        """Validate UK postcode format."""
+        """Validate and format UK postcode."""
         if not v:
             raise ValueError('Postcode is required')
         
-        # Basic UK postcode validation
-        postcode_pattern = r'^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$'
-        if not re.match(postcode_pattern, v.upper()):
+        formatted_postcode = format_uk_postcode(v)
+        if formatted_postcode is None:
             raise ValueError('Invalid UK postcode format')
         
-        return v.upper()
+        return formatted_postcode
 
 
 class AppointmentUpdate(BaseModel):
@@ -147,16 +147,15 @@ class AppointmentUpdate(BaseModel):
 
     @validator('postcode')
     def validate_postcode(cls, v):
-        """Validate UK postcode format."""
+        """Validate and format UK postcode."""
         if v is None:
             return v
         
-        # Basic UK postcode validation
-        postcode_pattern = r'^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$'
-        if not re.match(postcode_pattern, v.upper()):
+        formatted_postcode = format_uk_postcode(v)
+        if formatted_postcode is None:
             raise ValueError('Invalid UK postcode format')
         
-        return v.upper()
+        return formatted_postcode
 
 
 Appointment = AppointmentBase
