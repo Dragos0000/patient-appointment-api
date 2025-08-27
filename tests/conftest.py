@@ -1,50 +1,40 @@
-"""Pytest configuration and shared fixtures."""
-
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from src.adapters.database import Base, get_db
-from src.entrypoints.api import app
-
-# Test database URL (in-memory SQLite)
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from src.adapters.database.tables import patients_table, appointments_table
 
 
-def override_get_db():
-    """Override database dependency for testing."""
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
+@pytest.fixture
+def test_engine():
+    """Create in-memory SQLite engine for testing."""
+    return create_engine("sqlite:///:memory:")
 
 
-@pytest.fixture(scope="function")
-def db_session():
-    """Create a fresh database session for each test."""
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        Base.metadata.drop_all(bind=engine)
+@pytest.fixture
+def patient_columns():
+    """Get patient table columns as dictionary."""
+    return {col.name: col for col in patients_table.columns}
 
 
-@pytest.fixture(scope="function")
-def client(db_session):
-    """Create a test client with database override."""
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.clear()
+@pytest.fixture
+def appointment_columns():
+    """Get appointment table columns as dictionary."""
+    return {col.name: col for col in appointments_table.columns}
+
+
+@pytest.fixture
+def expected_patient_columns():
+    """Expected patient table column names."""
+    return ["nhs_number", "name", "date_of_birth", "postcode"]
+
+
+@pytest.fixture
+def expected_appointment_columns():
+    """Expected appointment table column names."""
+    return ["id", "patient", "status", "time", "duration", "clinician", "department", "postcode"]
+
+
+@pytest.fixture
+def expected_appointment_statuses():
+    """Expected appointment status values."""
+    return {"scheduled", "attended", "active", "missed", "cancelled"}
