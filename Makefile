@@ -45,5 +45,10 @@ test-coverage:
 	$(VENV_BIN)/pytest tests/unit/ --cov=src --cov-report=html --cov-report=term-missing -v --asyncio-mode=auto
 	@echo "Coverage report generated in htmlcov/"
 
+# Run the FastAPI application
+run-api:
+	@echo "Starting FastAPI application..."
+	$(VENV_BIN)/python run_api.py
+
 
 
