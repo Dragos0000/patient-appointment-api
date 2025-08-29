@@ -22,7 +22,7 @@ appointments_table = Table(
     Column("id", String(36), primary_key=True, default=lambda: str(uuid4())),
     Column("patient", String(10), nullable=False),  # Patient NHS number
     Column("status", Enum(AppointmentStatus), nullable=False, default=AppointmentStatus.SCHEDULED),
-    Column("time", DateTime, nullable=False),  # Appointment date and time
+    Column("time", DateTime(timezone=True), nullable=False),  # Timezone-aware appointment date and time
     Column("duration", String(20), nullable=False),  # Duration as string (e.g., "1h", "30m")
     Column("clinician", String(255), nullable=False),  # Clinician name
     Column("department", String(100), nullable=False),  # Department name

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from src.models.appointment import Appointment, AppointmentCreate, AppointmentUpdate, AppointmentStatus
 from src.adapters.database.tables import appointments_table
+from src.utils.timezone_utils import ensure_timezone_aware
 
 
 class AppointmentDatabaseAdapter:
@@ -11,6 +12,16 @@ class AppointmentDatabaseAdapter:
     
     def __init__(self, connection: AsyncConnection):
         self.connection = connection
+    
+    def _row_to_appointment(self, row) -> Appointment:
+        """Convert database row to Appointment object with timezone-aware datetime."""
+        row_dict = row._asdict()
+        
+        # Ensure the time field is timezone-aware
+        if 'time' in row_dict and row_dict['time'] is not None:
+            row_dict['time'] = ensure_timezone_aware(row_dict['time'])
+        
+        return Appointment(**row_dict)
     
     async def create_appointment(self, appointment_data: AppointmentCreate) -> Appointment:
         """
@@ -41,7 +52,7 @@ class AppointmentDatabaseAdapter:
         if row is None:
             return None
         
-        return Appointment(**row._asdict())
+        return self._row_to_appointment(row)
     
     async def get_appointments_by_patient(self, nhs_number: str) -> List[Appointment]:
         """
@@ -55,7 +66,7 @@ class AppointmentDatabaseAdapter:
         result = await self.connection.execute(record)
         rows = result.fetchall()
         
-        return [Appointment(**row._asdict()) for row in rows]
+        return [self._row_to_appointment(row) for row in rows]
     
     async def get_appointments_by_status(self, status: AppointmentStatus) -> List[Appointment]:
         """
@@ -69,7 +80,7 @@ class AppointmentDatabaseAdapter:
         result = await self.connection.execute(record)
         rows = result.fetchall()
         
-        return [Appointment(**row._asdict()) for row in rows]
+        return [self._row_to_appointment(row) for row in rows]
     
     async def get_all_appointments(self) -> List[Appointment]:
         """
@@ -79,7 +90,7 @@ class AppointmentDatabaseAdapter:
         result = await self.connection.execute(record)
         rows = result.fetchall()
         
-        return [Appointment(**row._asdict()) for row in rows]
+        return [self._row_to_appointment(row) for row in rows]
     
     async def update_appointment(self, appointment_id: str, appointment_data: AppointmentUpdate) -> Optional[Appointment]:
         """

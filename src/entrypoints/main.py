@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from src.entrypoints.patient_api import router as patient_router
+from src.entrypoints.appointment_api import router as appointment_router
 from src.models.api_responses import APIErrorResponse, APIError
 from src.adapters.database.init_db import create_tables
 import src.adapters.database.tables
@@ -32,6 +33,7 @@ app.add_middleware(
 
 
 app.include_router(patient_router)
+app.include_router(appointment_router)
 
 
 @app.on_event("startup")

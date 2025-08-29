@@ -1,12 +1,11 @@
-"""Appointment business service with business rules."""
-
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from models.appointment import Appointment, AppointmentCreate, AppointmentUpdate, AppointmentStatus
-from adapters.database.appointment_adapter import AppointmentDatabaseAdapter
-from utils.appointment_utils import is_appointment_overdue
+from src.models.appointment import Appointment, AppointmentCreate, AppointmentUpdate, AppointmentStatus
+from src.adapters.database.appointment_adapter import AppointmentDatabaseAdapter
+from src.utils.appointment_utils import is_appointment_overdue
+from src.utils.timezone_utils import get_utc_now
 
 
 class AppointmentBusinessService:
@@ -94,7 +93,7 @@ class AppointmentBusinessService:
             List of appointments that were marked as missed
         """
         if current_time is None:
-            current_time = datetime.now()
+            current_time = get_utc_now()
         
 
         active_statuses = [AppointmentStatus.SCHEDULED, AppointmentStatus.ACTIVE]

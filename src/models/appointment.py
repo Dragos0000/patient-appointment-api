@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field, validator
 from enum import Enum
 import re
 
-from utils.validators import format_uk_postcode
+from src.utils.validators import format_uk_postcode
+from src.utils.timezone_utils import ensure_timezone_aware, format_datetime_for_api, is_timezone_aware
 
 
 class AppointmentStatus(str, Enum):
@@ -48,7 +49,7 @@ class AppointmentBase(BaseModel):
 
     class Config:
         json_encoders = {
-            datetime: lambda v: v.isoformat()
+            datetime: lambda v: format_datetime_for_api(v) if v else None
         }
 
     @validator('duration')
@@ -71,6 +72,17 @@ class AppointmentBase(BaseModel):
             raise ValueError('Duration must specify at least hours or minutes')
         
         return v.strip()
+
+    @validator('time')
+    def validate_timezone_aware(cls, v):
+        """Ensure appointment time is timezone-aware."""
+        if not v:
+            raise ValueError('Appointment time is required')
+        
+        if not is_timezone_aware(v):
+            raise ValueError('Appointment time must be timezone-aware (include timezone information)')
+        
+        return v
 
     @validator('postcode')
     def validate_postcode(cls, v):
@@ -116,6 +128,17 @@ class AppointmentCreate(BaseModel):
             raise ValueError('Duration must specify at least hours or minutes')
         
         return v.strip()
+
+    @validator('time')
+    def validate_timezone_aware(cls, v):
+        """Ensure appointment time is timezone-aware."""
+        if not v:
+            raise ValueError('Appointment time is required')
+        
+        if not is_timezone_aware(v):
+            raise ValueError('Appointment time must be timezone-aware (include timezone information)')
+        
+        return v
 
     @validator('postcode')
     def validate_postcode(cls, v):
@@ -169,6 +192,17 @@ class AppointmentUpdate(BaseModel):
             raise ValueError('Duration must specify at least hours or minutes')
         
         return v.strip()
+
+    @validator('time')
+    def validate_timezone_aware(cls, v):
+        """Ensure appointment time is timezone-aware if provided."""
+        if v is None:
+            return v
+        
+        if not is_timezone_aware(v):
+            raise ValueError('Appointment time must be timezone-aware (include timezone information)')
+        
+        return v
 
     @validator('postcode')
     def validate_postcode(cls, v):
