@@ -7,6 +7,7 @@ from src.entrypoints.patient_api import router as patient_router
 from src.entrypoints.appointment_api import router as appointment_router
 from src.models.api_responses import APIErrorResponse, APIError
 from src.adapters.database.init_db import create_tables
+from src.services.background_tasks import background_service
 import src.adapters.database.tables
 
 # Configure logging
@@ -38,16 +39,36 @@ app.include_router(appointment_router)
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on startup."""
+    """Initialize database and background tasks on startup."""
     logger.info("Creating database tables...")
     await create_tables()
     logger.info("Database tables created successfully!")
+    
+    # Start background task service
+    logger.info("Starting background task service...")
+    await background_service.start()
+    logger.info("Background task service started successfully!")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up background tasks on shutdown."""
+    logger.info("Stopping background task service...")
+    await background_service.stop()
+    logger.info("Background task service stopped successfully!")
 
 
 @app.get("/health")
 async def health_check():
     """Health check."""
-    return {"status": "healthy", "message": "Patient Appointment API is running"}
+    return {
+        "status": "healthy", 
+        "message": "Patient Appointment API is running",
+        "background_tasks": {
+            "running": background_service.running,
+            "check_interval": f"{background_service.check_interval}s"
+        }
+    }
 
 
 @app.exception_handler(Exception)

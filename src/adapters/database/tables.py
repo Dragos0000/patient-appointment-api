@@ -1,13 +1,22 @@
+import os
 from sqlalchemy import Table, Column, String, DateTime, Date, Enum
 from uuid import uuid4
+from dotenv import load_dotenv
 
 from src.adapters.database.connection import metadata
 from src.models.appointment import AppointmentStatus
 
+# Load environment variables
+load_dotenv()
+
+# Get table names from environment variables
+PATIENTS_TABLE_NAME = os.getenv("PATIENTS_TABLE_NAME", "patients")
+APPOINTMENTS_TABLE_NAME = os.getenv("APPOINTMENTS_TABLE_NAME", "appointments")
+
 
 # Patients table
 patients_table = Table(
-    "patients",
+    PATIENTS_TABLE_NAME,
     metadata,
     Column("nhs_number", String(10), primary_key=True),  # 10 digit NHS number as primary key
     Column("name", String(255), nullable=False),
@@ -17,7 +26,7 @@ patients_table = Table(
 
 # Appointments table
 appointments_table = Table(
-    "appointments",
+    APPOINTMENTS_TABLE_NAME,
     metadata,
     Column("id", String(36), primary_key=True, default=lambda: str(uuid4())),
     Column("patient", String(10), nullable=False),  # Patient NHS number
