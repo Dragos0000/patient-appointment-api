@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytest
 
 from src.utils.appointment_utils import (
@@ -54,13 +54,13 @@ def test_parse_duration_edge_cases():
 
 def test_get_appointment_end_time_valid():
     """Test calculating appointment end time."""
-    start_time = datetime(2024, 1, 15, 10, 0) 
+    start_time = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
     
     test_cases = [
-        ("1h", datetime(2024, 1, 15, 11, 0)),      
-        ("30m", datetime(2024, 1, 15, 10, 30)),    
-        ("1h 30m", datetime(2024, 1, 15, 11, 30)), 
-        ("2h 15m", datetime(2024, 1, 15, 12, 15)), 
+        ("1h", datetime(2024, 1, 15, 11, 0, tzinfo=timezone.utc)),
+        ("30m", datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)),
+        ("1h 30m", datetime(2024, 1, 15, 11, 30, tzinfo=timezone.utc)),
+        ("2h 15m", datetime(2024, 1, 15, 12, 15, tzinfo=timezone.utc)),
     ]
     
     for duration_str, expected_end in test_cases:
@@ -70,7 +70,7 @@ def test_get_appointment_end_time_valid():
 
 def test_get_appointment_end_time_invalid():
     """Test calculating end time with invalid duration."""
-    start_time = datetime(2024, 1, 15, 10, 0)
+    start_time = datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
     
     invalid_durations = ["", "abc", "1x", None]
     

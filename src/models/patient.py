@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional
 from pydantic import BaseModel, Field, validator
 
-from utils.validators import format_nhs_number, format_uk_postcode
+from src.utils.validators import format_nhs_number, format_uk_postcode
 
 
 class PatientBase(BaseModel):

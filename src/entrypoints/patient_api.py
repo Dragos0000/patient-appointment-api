@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from src.adapters.database.connection import get_db_connection
 from src.adapters.database.patient_adapter import PatientDatabaseAdapter
 from src.models.patient import Patient, PatientCreate, PatientUpdate
+from src.models.appointment import Appointment
 from src.models.api_responses import APIResponse, APIListResponse, PaginationInfo
 
 router = APIRouter(prefix="/patients", tags=["patients"])
@@ -161,11 +162,13 @@ async def delete_patient(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/{nhs_number}/appointments", response_model=APIListResponse)
+@router.get("/{nhs_number}/appointments", response_model=APIListResponse[Appointment])
 async def get_patient_appointments(
     nhs_number: str,
+    limit: int = Query(50, ge=1, le=100, description="Number of appointments to return"),
+    offset: int = Query(0, ge=0, description="Number of appointments to skip"),
     adapter: PatientDatabaseAdapter = Depends(get_patient_adapter)
-) -> APIListResponse:
+) -> APIListResponse[Appointment]:
     """
     Get all appointments for a patient.
     Raises:
@@ -180,12 +183,34 @@ async def get_patient_appointments(
                 detail=f"Patient with NHS number {nhs_number} not found"
             )
         
-        # TODO: This will be implemented when the appointment adapter is created
-        # For now, return empty list
-        return APIListResponse(
-            data=[],
-            message="Patient appointments retrieved successfully (not implemented yet)"
-        )
+        # Get appointment adapter to fetch appointments
+        from src.adapters.database.appointment_adapter import AppointmentDatabaseAdapter
+        from src.adapters.database.connection import get_db_connection
+        
+        # Get database connection and create appointment adapter
+        async for connection in get_db_connection():
+            appointment_adapter = AppointmentDatabaseAdapter(connection)
+            
+            # Get appointments for this patient
+            appointments = await appointment_adapter.get_appointments_by_patient(nhs_number)
+            
+            # Apply pagination
+            total = len(appointments)
+            paginated_appointments = appointments[offset:offset + limit]
+            has_next = offset + limit < total
+            
+            pagination = PaginationInfo(
+                total=total,
+                limit=limit,
+                offset=offset,
+                has_next=has_next
+            )
+            
+            return APIListResponse(
+                data=paginated_appointments,
+                pagination=pagination,
+                message="Patient appointments retrieved successfully"
+            )
         
     except HTTPException:
         raise

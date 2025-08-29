@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
@@ -17,7 +17,7 @@ async def test_create_appointment(appointment_service, sample_appointment):
     appointment_data = AppointmentCreate(
         patient="9434765919",
         status=AppointmentStatus.SCHEDULED,
-        time=datetime(2024, 1, 15, 10, 0),
+        time=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
         duration="1h",
         clinician="Dr. Smith",
         department="cardiology",
@@ -113,14 +113,14 @@ async def test_mark_appointment_attended(appointment_service, sample_appointment
 @patch('src.services.appointment_service.is_appointment_overdue')
 async def test_mark_overdue_appointments_as_missed(mock_is_overdue, appointment_service):
     """Test marking overdue appointments as missed."""
-    current_time = datetime(2024, 1, 15, 12, 0)  # Noon
+    current_time = datetime(2024, 1, 15, 12, 0, tzinfo=timezone.utc)  # Noon
     
     # Create test appointments
     overdue_appointment = Appointment(
         id="overdue-id",
         patient="9434765919",
         status=AppointmentStatus.SCHEDULED,
-        time=datetime(2024, 1, 15, 10, 0),  # 10 AM
+        time=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),  # 10 AM
         duration="1h",
         clinician="Dr. Smith",
         department="cardiology",
@@ -131,7 +131,7 @@ async def test_mark_overdue_appointments_as_missed(mock_is_overdue, appointment_
         id="not-overdue-id",
         patient="9434765919",
         status=AppointmentStatus.SCHEDULED,
-        time=datetime(2024, 1, 15, 13, 0),  # 1 PM (future)
+        time=datetime(2024, 1, 15, 13, 0, tzinfo=timezone.utc),  # 1 PM (future)
         duration="1h",
         clinician="Dr. Smith",
         department="cardiology",
@@ -147,8 +147,7 @@ async def test_mark_overdue_appointments_as_missed(mock_is_overdue, appointment_
     
 
     def mock_overdue_check(start_time, duration, current):
-
-        return start_time == datetime(2024, 1, 15, 10, 0)
+        return start_time == datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc)
     
     mock_is_overdue.side_effect = mock_overdue_check
     

@@ -21,12 +21,12 @@ The following environment variables can be configured via a `.env` file in the p
 
 ## Features
 
-- ✅ **Timezone-aware datetime handling** - All timestamps include timezone information
-- ✅ **Automatic overdue appointment processing** - Background tasks mark overdue appointments as missed
-- ✅ **NHS number validation** - Modulus 11 checksum validation
-- ✅ **UK postcode formatting** - Automatic postcode validation and formatting
-- ✅ **Business rule enforcement** - Cancelled appointments cannot be reinstated
-- ✅ **CRUD API** - Full CRUD operations for patients and appointments
+- **Timezone-aware datetime handling** - All timestamps include timezone information
+- **Automatic overdue appointment processing** - Background tasks mark overdue appointments as missed
+- **NHS number validation** - Modulus 11 checksum validation
+- **UK postcode formatting** - Automatic postcode validation and formatting
+- **Business rule enforcement** - Cancelled appointments cannot be reinstated
+- **CRUD API** - Full CRUD operations for patients and appointments
 
 ## Setup
 
@@ -47,11 +47,16 @@ The following environment variables can be configured via a `.env` file in the p
 
 This repository includes a demo SQLite database (`patient_appointments.db`) with sample data for testing and demonstration purposes:
 
-- **2 demo patients** with valid NHS numbers and UK postcodes
-- **Sample appointments** showing different statuses and timezone handling
-- **Clean test data** - no sensitive information
+- 24 demo patients with valid NHS numbers and UK postcodes
+- 13 sample appointments across different statuses:
+  - SCHEDULED: 5 appointments
+  - CANCELLED: 3 appointments  
+  - ATTENDED: 3 appointments
+  - MISSED: 2 appointments
+- Clean test data - no sensitive information
+- Unicode support - includes international patient names for GDPR compliance testing
 
 ### Important Notes:
-- This is a **demo/test database only**
-- Contains **no real patient data**
+- This is a demo/test database only
+- Contains no real patient data
 

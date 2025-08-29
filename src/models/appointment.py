@@ -39,7 +39,7 @@ class AppointmentBase(BaseModel):
     """Base appointment model"""
     
     id: str = Field(..., description="Unique appointment identifier")
-    patient: str = Field(..., description="Patient NHS number or identifier")
+    patient: str = Field(..., description="Patient NHS number")
     status: AppointmentStatus = Field(..., description="Appointment status")
     time: datetime = Field(..., description="Appointment date and time")
     duration: str = Field(..., description="Duration (e.g., '1h', '30m', '1h 30m')")
@@ -51,6 +51,19 @@ class AppointmentBase(BaseModel):
         json_encoders = {
             datetime: lambda v: format_datetime_for_api(v) if v else None
         }
+
+    @validator('patient')
+    def validate_patient_nhs_number(cls, v):
+        """Validate patient NHS number with checksum validation."""
+        if not v:
+            raise ValueError('Patient NHS number is required')
+        
+        from src.utils.validators import format_nhs_number
+        formatted_nhs = format_nhs_number(v)
+        if formatted_nhs is None:
+            raise ValueError('Invalid patient NHS number: must be 10 digits with valid checksum')
+        
+        return formatted_nhs
 
     @validator('duration')
     def validate_duration_format(cls, v):
@@ -100,13 +113,26 @@ class AppointmentBase(BaseModel):
 class AppointmentCreate(BaseModel):
     """Model for creating a new appointment"""
     
-    patient: str = Field(..., description="Patient NHS number or identifier")
+    patient: str = Field(..., description="Patient NHS number")
     status: AppointmentStatus = Field(..., description="Appointment status")
     time: datetime = Field(..., description="Appointment date and time")
     duration: str = Field(..., description="Duration (e.g., '1h', '30m', '1h 30m')")
     clinician: str = Field(..., description="Name of the clinician")
     department: str = Field(..., description="Department name")
     postcode: str = Field(..., description="Postcode for the appointment location")
+
+    @validator('patient')
+    def validate_patient_nhs_number(cls, v):
+        """Validate patient NHS number with checksum validation."""
+        if not v:
+            raise ValueError('Patient NHS number is required')
+        
+        from src.utils.validators import format_nhs_number
+        formatted_nhs = format_nhs_number(v)
+        if formatted_nhs is None:
+            raise ValueError('Invalid patient NHS number: must be 10 digits with valid checksum')
+        
+        return formatted_nhs
 
     @validator('duration')
     def validate_duration_format(cls, v):
@@ -171,6 +197,19 @@ class AppointmentUpdate(BaseModel):
         if self.status is not None:
             if not validate_status_transition(current_status, self.status):
                 raise ValueError(f"Invalid status transition from {current_status} to {self.status}: Cancelled appointments cannot be reinstated")
+
+    @validator('patient')
+    def validate_patient_nhs_number(cls, v):
+        """Validate patient NHS number with checksum validation."""
+        if v is None:
+            return v
+        
+        from src.utils.validators import format_nhs_number
+        formatted_nhs = format_nhs_number(v)
+        if formatted_nhs is None:
+            raise ValueError('Invalid patient NHS number: must be 10 digits with valid checksum')
+        
+        return formatted_nhs
 
     @validator('duration')
     def validate_duration_format(cls, v):

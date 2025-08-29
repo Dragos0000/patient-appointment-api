@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from sqlalchemy import create_engine
 
 from src.adapters.database.tables import patients_table, appointments_table
@@ -102,9 +102,9 @@ def sample_appointment_data():
     """Sample appointment data for testing."""
     return {
         "id": "test-appointment-id",
-        "patient": "1234567890",
+        "patient": "9434765870",  # Valid NHS number
         "status": AppointmentStatus.SCHEDULED,
-        "time": datetime(2024, 6, 15, 14, 30),
+        "time": datetime(2024, 6, 15, 14, 30, tzinfo=timezone.utc),
         "duration": "1h",
         "clinician": "Dr. Smith",
         "department": "cardiology",
@@ -116,9 +116,9 @@ def sample_appointment_data():
 def sample_appointment_create_data():
     """Sample appointment create data (without id)."""
     return {
-        "patient": "1234567890",
+        "patient": "9434765870",  # Valid NHS number
         "status": AppointmentStatus.SCHEDULED,
-        "time": datetime(2024, 6, 15, 14, 30),
+        "time": datetime(2024, 6, 15, 14, 30, tzinfo=timezone.utc),
         "duration": "1h",
         "clinician": "Dr. Smith",
         "department": "cardiology",
@@ -140,7 +140,7 @@ def sample_appointment():
         id="test-appointment-id",
         patient="9434765919",
         status=AppointmentStatus.SCHEDULED,
-        time=datetime(2024, 1, 15, 10, 0),
+        time=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
         duration="1h",
         clinician="Dr. Smith",
         department="cardiology",
@@ -155,7 +155,7 @@ def cancelled_appointment():
         id="cancelled-appointment-id",
         patient="9434765919",
         status=AppointmentStatus.CANCELLED,
-        time=datetime(2024, 1, 15, 10, 0),
+        time=datetime(2024, 1, 15, 10, 0, tzinfo=timezone.utc),
         duration="1h",
         clinician="Dr. Smith",
         department="cardiology",
