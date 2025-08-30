@@ -6,7 +6,7 @@ VENV := venv
 VENV_BIN := $(VENV)/bin
 PIP := $(VENV_BIN)/pip
 
-.PHONY: venv install-dependencies install-test-dependencies test test-unit test-e2e test-e2e-with-api test-coverage run-api backup-db restore-db cleanup-db
+.PHONY: venv install-dependencies install-test-dependencies test test-unit test-e2e test-e2e-with-api test-features test-features-allure test-coverage run-api backup-db restore-db cleanup-db allure-report
 
 # Create and activate virtual environment
 venv:
@@ -30,7 +30,7 @@ install-test-dependencies: venv
 	@echo "Test dependencies installed!"
 
 # Run all tests
-test: test-unit test-e2e
+test: test-unit test-e2e test-features
 	@echo "All tests completed!"
 
 # Run unit tests
@@ -43,7 +43,7 @@ test-unit: backup-db
 	@echo "Database restored to original state"
 
 # Run end-to-end tests (requires API to be running)
-test-e2e: run-api backup-db
+test-e2e: backup-db
 	@echo "Running end-to-end tests..."
 	@echo "Warning: Make sure the API is running with 'make run-api' in another terminal"
 	$(VENV_BIN)/pytest tests/e2e/ -v --asyncio-mode=auto
@@ -52,6 +52,16 @@ test-e2e: run-api backup-db
 	$(VENV_BIN)/python scripts/backup_restore_db.py restore
 	@echo "Database restored to original state"
 
+# Run behave BDD tests (requires API to be running)
+test-features: backup-db
+	@echo "Running behave BDD tests..."
+	@echo "Warning: Make sure the API is running with 'make run-api' in another terminal"
+	@echo "Setting API_HOST environment variable..."
+	$(VENV_BIN)/behave tests/behave_features/
+	@echo "Behave tests completed!"
+	@echo "Restoring database..."
+	$(VENV_BIN)/python scripts/backup_restore_db.py restore
+	@echo "Database restored to original state"
 
 # Run comprehensive coverage with both unit and e2e tests
 coverage-full:
@@ -109,4 +119,38 @@ cleanup-db:
 	@echo "Cleaning up database backup..."
 	$(VENV_BIN)/python scripts/backup_restore_db.py cleanup
 	@echo "Database backup cleanup completed!"
+
+# Run behave BDD tests with Allure reporting (requires API to be running)
+test-behave-allure: backup-db
+	@echo "Running behave BDD tests with Allure reporting..."
+	@echo "Warning: Make sure the API is running with 'make run-api' in another terminal"
+	@echo "Setting API_HOST environment variable..."
+	@mkdir -p allure-results
+	$(VENV_BIN)/behave tests/behave_features/ -f allure -o allure-results -f pretty
+	@echo "Behave tests with Allure completed!"
+		@echo "Generating Allure HTML report..."
+	@if [ ! -d "allure-results" ]; then \
+		echo "No allure-results directory found. Run 'make test-behave-allure' first."; \
+		exit 1; \
+	fi
+	allure generate --clean --single-file -o allure-report allure-results
+	@echo "Allure report generated in 'allure-report' directory"
+	@echo "Open 'allure-report/index.html' in your browser to view the report"
+	@echo "Restoring database..."
+	$(VENV_BIN)/python scripts/backup_restore_db.py restore
+	@echo "Database restored to original state"
+
+# Generate Allure HTML report
+allure-report:
+	@echo "Generating Allure HTML report..."
+	@if [ ! -d "allure-results" ]; then \
+		echo "No allure-results directory found. Run 'make test-behave-allure' first."; \
+		exit 1; \
+	fi
+	allure generate --clean --single-file -o allure-report allure-results
+	@echo "Allure report generated in 'allure-report' directory"
+	@echo "Open 'allure-report/index.html' in your browser to view the report"
+
+
+
 
