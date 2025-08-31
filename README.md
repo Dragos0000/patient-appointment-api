@@ -1,6 +1,23 @@
 # Patient Appointment API
 
-A FastAPI-based API for managing patients and appointments with timezone-aware datetime handling and automatic background processing.
+A FastAPI-based API for managing patients and appointments.
+
+## Getting Started
+
+1. Create environment configuration:
+   ```bash
+   cp .env.example .env
+   ```
+
+   Change the values as needed
+
+2. Install dependencies and run the API:
+   ```bash
+   make install-dependencies
+   make run-api
+   ```
+
+The API will be available at `http://localhost:8000`
 
 ## Environment Variables
 
@@ -19,6 +36,35 @@ The following environment variables can be configured via a `.env` file in the p
   - `900` = 15 minutes
   - `1800` = 30 minutes
 
+### API Configuration
+- `API_HOST` - Host and port for API server (default: `0.0.0.0:8000`)
+
+## API Documentation
+
+Interactive API documentation is available at:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+## API Endpoints
+
+### Patients
+- `GET /patients` - List all patients
+- `POST /patients` - Create a new patient
+- `GET /patients/{nhs_number}` - Get patient by NHS number
+- `PUT /patients/{nhs_number}` - Update patient
+- `DELETE /patients/{nhs_number}` - Delete patient
+- `GET /patients/{nhs_number}/appointments` - Get all appointments for a patient
+
+### Appointments
+- `GET /appointments` - List all appointments
+- `POST /appointments` - Create a new appointment
+- `GET /appointments/{id}` - Get appointment by ID
+- `PUT /appointments/{id}` - Update appointment
+- `DELETE /appointments/{id}` - Delete appointment
+- `PUT /appointments/{id}/cancel` - Cancel appointment
+- `PUT /appointments/{id}/attend` - Mark appointment as attended
+- `POST /appointments/mark-overdue-as-missed` - Process overdue appointments
+
 ## Features
 
 - **Timezone-aware datetime handling** - All timestamps include timezone information
@@ -27,36 +73,94 @@ The following environment variables can be configured via a `.env` file in the p
 - **UK postcode formatting** - Automatic postcode validation and formatting
 - **Business rule enforcement** - Cancelled appointments cannot be reinstated
 - **CRUD API** - Full CRUD operations for patients and appointments
+- **Appointment filtering** - Filter appointments by patient, status, department, or clinician
+- **Pagination support** - Configurable pagination for large datasets
+- **Patient appointment history** - View all appointments for a specific patient
+- **Status management** - Track appointment status with flexible transitions 
+- **Background service** - Automatic startup of background tasks
+- **Validation** - Input validation for all API endpoints
+- **Error handling** - Structured error responses with detailed messages
 
-## Setup
+## Testing
 
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
+Run the test suite:
+```bash
+make install-test-dependencies # Install test dependencies 
+make test           # All tests
+make test-unit      # Unit tests only
+make test-e2e       # End-to-end tests
+make test-features  # BDD feature tests
+```
 
-2. Modify the `.env` file with your desired configuration
+## Future Improvements
 
-3. Install dependencies and run the API:
-   ```bash
-   make install-dependencies
-   make run-api
-   ```
+### Enhanced Status Transition Rules
+The current status management allows flexible transitions between most states. Future versions could implement stricter business rules:
 
-## Demo Database
+**Proposed Status Flow:**
+```
+SCHEDULED → ATTENDED → ACTIVE → FINISHED
+SCHEDULED → MISSED (automatic after appointment time)
+SCHEDULED → CANCELLED (manual cancellation)
+```
 
-This repository includes a demo SQLite database (`patient_appointments.db`) with sample data for testing and demonstration purposes:
+**Enhanced Validation Rules:**
+- `SCHEDULED` can only transition to: `ATTENDED`, `CANCELLED`, or `MISSED`
+- `ATTENDED` can only transition to: `ACTIVE` or `CANCELLED`
+- `ACTIVE` can only transition to: `FINISHED` or `CANCELLED`
+- `FINISHED` and `CANCELLED` are terminal states (no further transitions)
+- `MISSED` could potentially transition to `ATTENDED` (late arrival handling)
 
-- 24 demo patients with valid NHS numbers and UK postcodes
-- 13 sample appointments across different statuses:
-  - SCHEDULED: 5 appointments
-  - CANCELLED: 3 appointments  
-  - ATTENDED: 3 appointments
-  - MISSED: 2 appointments
-- Clean test data - no sensitive information
-- Unicode support - includes international patient names for GDPR compliance testing
+### Internationalization & Localization
+For expansion into foreign markets, the API would need comprehensive localization support:
 
-### Important Notes:
-- This is a demo/test database only
-- Contains no real patient data
+**Error Message Localization:**
+- Multi-language error messages (English, Spanish, French, German, etc.)
+- Locale-specific validation messages
+- Cultural adaptation of business rules and terminology
+
+**Implementation Requirements:**
+- `Accept-Language` header support in API requests
+- Message translation framework (e.g., gettext, i18next)
+- Localized validation error responses
+- Database schema for storing translations
+- Configuration for supported locales and fallback languages
+
+**Regional Adaptations:**
+- Country-specific patient ID formats (not just NHS numbers)
+- Local postcode/postal code validation patterns
+- Date/time formatting 
+- Regulatory compliance per country (GDPR, HIPAA equivalents)
+
+## Technical Commentary
+
+### Implementation Challenges and Decisions
+
+**Architecture:**
+The project implements a clean architecture pattern with clear separation of concerns:
+
+- **FastAPI** - Modern, high-performance web framework chosen for automatic OpenAPI documentation, built-in async support, and excellent type hints integration
+- **Pydantic** - Data validation and serialization using Python type annotations, providing input validation 
+- **Clean Architecture** - Organized into distinct layers:
+  - `models/` - Domain and data validation (Pydantic models)
+  - `services/` - Business logic and rules
+  - `adapters/` - Database and external system interfaces
+  - `entrypoints/` - API routes and HTTP handling
+- **Async/Await** - Asynchronous implementation 
+- **SQLAlchemy Core** - Database abstraction with async support, avoiding ORM complexity for better performance
+
+
+
+**BDD Testing Framework Choice:**  
+I initially tried using `pytest-bdd` for behavior-driven development testing, but I ran into major issues with async/await support in step definitions. The framework struggled with asynchronous operations when testing FastAPI endpoints that needed async database connections. I switched to `behave`, which offered better async support through custom context management and `asyncio` integration in the `environment.py` setup.
+
+**NHS Number Validation Implementation:**  
+The official NHS Data Dictionary documentation at [datadictionary.nhs.uk](https://www.datadictionary.nhs.uk/attributes/nhs_number.html) has a critical error in Step 5 of the Modulus 11 validation algorithm. The documentation incorrectly states: *"Check the remainder matches the check digit"* - this is mathematically wrong.
+
+**The Issue:** The remainder and check digit are complements that add up to 11 (except for special cases), so they will almost never be the same. For example, if the remainder is 2, the check digit is 9, and 2 is not equal to 9.
+
+**Correct Implementation:** Fortunately, [Wikipedia's NHS number article](https://en.wikipedia.org/wiki/NHS_number) provides the right algorithm with a proper worked example using NHS number `943 476 5919`. The correct process calculates the check digit as `(11 - remainder)` with special handling for results of 10 (invalid) and 11 (which becomes 0). It then compares this calculated check digit to the 10th digit of the NHS number, not to the remainder itself.
+
+
+
 
