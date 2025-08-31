@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database files (uncomment to exclude from git)
+# patient_appointments.db
+# *.db
+
+# Environment files
+.env.local
+.env.development
+.env.production
+.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Allure results
+allure-results/
+allure-report/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.dockerfile
+
+# PostgreSQL data
+postgres_data/
+

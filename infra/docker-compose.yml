@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: patient-appointments-db
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-patient_appointments}
+      POSTGRES_USER: ${POSTGRES_USER:-patient_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patient_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data_patient_appointments:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-patient_user} -d ${POSTGRES_DB:-patient_appointments}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - patient-network
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    container_name: patient-appointments-api
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://patient_user:patient_password@postgres:5432/patient_appointments}
+      DB_ECHO: ${DB_ECHO:-false}
+      PATIENTS_TABLE_NAME: ${PATIENTS_TABLE_NAME:-patients}
+      APPOINTMENTS_TABLE_NAME: ${APPOINTMENTS_TABLE_NAME:-appointments}
+      BACKGROUND_TASK_INTERVAL: ${BACKGROUND_TASK_INTERVAL:-300}
+      API_HOST: ${API_HOST:-0.0.0.0:8000}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - patient-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data_patient_appointments:
+    driver: local
+
+networks:
+  patient-network:
+    driver: bridge

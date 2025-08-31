@@ -1,0 +1,67 @@
+name: Tests
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y make
+        
+    - name: Install Python dependencies
+      run: |
+        make install-test-dependencies
+        
+    - name: Start API in background
+      run: |
+        make run-api &
+        API_PID=$!
+        echo $API_PID > api.pid
+        echo "API started with PID $API_PID"
+        
+    - name: Wait for API to be ready
+      run: |
+        echo "Waiting for API to be ready..."
+        for i in {1..30}; do
+          if curl -f http://localhost:8000/health; then
+            echo "API is healthy"
+            break
+          fi
+          echo "Attempt $i: API not ready yet, waiting..."
+          sleep 2
+        done
+        curl -f http://localhost:8000/health || exit 1
+        
+    - name: Run all tests
+      run: |
+        echo "Running all tests..."
+        make test
+        
+    - name: Stop API
+      if: always()
+      run: |
+        if [ -f api.pid ]; then
+          API_PID=$(cat api.pid)
+          echo "Stopping API (PID $API_PID)..."
+          kill $API_PID 2>/dev/null || true
+          wait $API_PID 2>/dev/null || true
+          rm api.pid
+          echo "API stopped"
+        fi
