@@ -6,7 +6,7 @@ VENV := venv
 VENV_BIN := $(VENV)/bin
 PIP := $(VENV_BIN)/pip
 
-.PHONY: venv install-dependencies install-test-dependencies test test-unit test-e2e test-e2e-with-api test-features test-features-allure test-coverage run-api backup-db restore-db cleanup-db allure-report
+.PHONY: venv install-dependencies install-test-dependencies test test-unit test-e2e test-e2e-with-api test-features test-features-allure test-coverage run-api backup-db restore-db cleanup-db allure-report docs-report
 
 # Create and activate virtual environment
 venv:
@@ -150,6 +150,14 @@ allure-report:
 	allure generate --clean --single-file -o allure-report allure-results
 	@echo "Allure report generated in 'allure-report' directory"
 	@echo "Open 'allure-report/index.html' in your browser to view the report"
+
+# Copy Allure report to docs directory
+docs-report: allure-report
+	@echo "Copying Allure report to docs directory..."
+	@mkdir -p docs || true
+	@cp allure-report/index.html docs/
+	@echo "Allure report copied to 'docs/index.html'"
+	@echo "You can now access the report at 'docs/index.html'"
 
 
 
