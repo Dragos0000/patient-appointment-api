@@ -8,22 +8,32 @@ A FastAPI-based API for managing patients and appointments.
 
 ### Running Without Docker (Local Development)
 
-1. **Install dependencies:**
+1. **Create environment file (there are defaults in place for easy testing so the file can be empty but it must exist):**
+   ```bash
+   touch .env 
+   or
+   cp env.example .env
+   # Edit .env with your preferred values
+   ```
+
+2. **Install dependencies:**
    ```bash
    make install-dependencies
    ```
 
-2. **Start the API:**
+3. **Start the API:**
    ```bash
    make run-api
    ```
 
-The API will be available at `http://localhost:8000` using SQLite database.
+The API will be available at `http://localhost:8000` using SQLite database (DATABASE_URL=sqlite+aiosqlite:///./patient_appointments.db).
 
 ### Running With Docker 
 
-1. **Create environment file (optional):**
+1. **Create environment file (there are defaults in place for easy testing so the file can be empty but it must exist):**
    ```bash
+    touch .env 
+   or
    cp env.example .env
    # Edit .env with your preferred values
    ```
@@ -33,7 +43,7 @@ The API will be available at `http://localhost:8000` using SQLite database.
    make start-services
    ```
 
-3. **Migrate existing data (optional):**
+3. **Migrate existing data (optional if you want to have test data):**
    ```bash
    # If you have existing SQLite data to migrate
    make migrate-sqlite-to-postgres
