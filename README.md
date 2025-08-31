@@ -133,7 +133,26 @@ The background service automatically identifies appointments that are past their
 
 ## Testing
 
-Run the test suite:
+**Important:** Make sure the API is running before executing tests.
+
+### Start API in Background
+
+**Option 1: In another terminal:**
+```bash
+make run-api
+```
+
+**Option 2: As background process:**
+```bash
+make run-api &
+```
+
+**Option 3: Using nohup (persistent background):**
+```bash
+nohup make run-api > api.log 2>&1 &
+```
+
+### Run the test suite:
 ```bash
 make install-test-dependencies # Install test dependencies 
 make test           # All tests
@@ -169,12 +188,6 @@ For expansion into foreign markets, the API would need comprehensive localizatio
 - Locale-specific validation messages
 - Cultural adaptation of business rules and terminology
 
-**Implementation Requirements:**
-- `Accept-Language` header support in API requests
-- Message translation framework (e.g., gettext, i18next)
-- Localized validation error responses
-- Database schema for storing translations
-- Configuration for supported locales and fallback languages
 
 **Regional Adaptations:**
 - Country-specific patient ID formats (not just NHS numbers)

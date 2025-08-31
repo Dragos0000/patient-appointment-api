@@ -1,5 +1,3 @@
-"""Tests for database table definitions."""
-
 from sqlalchemy import MetaData
 from sqlalchemy.schema import CreateTable
 

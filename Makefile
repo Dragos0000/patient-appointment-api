@@ -86,8 +86,9 @@ coverage-full:
 	$(VENV_BIN)/python -m coverage run -a -m pytest tests/e2e/ --asyncio-mode=auto; \
 	TEST_EXIT_CODE=$$?; \
 	echo "Stopping API (PID $$API_PID)..."; \
-	kill $$API_PID 2>/dev/null || true; \
-	wait $$API_PID 2>/dev/null || true; \
+	kill -TERM $$API_PID 2>/dev/null || true; \
+	sleep 2; \
+	kill -KILL $$API_PID 2>/dev/null || true; \
 	echo "API stopped"; \
 	echo "Restoring database..."; \
 	$(VENV_BIN)/python scripts/backup_restore_db.py restore; \

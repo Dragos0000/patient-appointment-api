@@ -1,5 +1,3 @@
-"""Patient database adapter using SQLAlchemy Core."""
-
 from typing import List, Optional
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncConnection
