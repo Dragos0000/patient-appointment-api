@@ -46,7 +46,7 @@ jobs:
       run: |
         make start-services
         echo "Waiting for services to be ready..."
-        sleep 30
+        sleep 3
         
     - name: Verify services are running
       run: |
