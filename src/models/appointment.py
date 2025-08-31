@@ -196,7 +196,7 @@ class AppointmentUpdate(BaseModel):
         """
         if self.status is not None:
             if not validate_status_transition(current_status, self.status):
-                raise ValueError(f"Invalid status transition from {current_status} to {self.status}: Cancelled appointments cannot be reinstated")
+                raise ValueError(f"Invalid status transition from {current_status.value} to {self.status.value}: Cancelled appointments cannot be reinstated")
 
     @validator('patient')
     def validate_patient_nhs_number(cls, v):
