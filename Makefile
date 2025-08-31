@@ -5,8 +5,13 @@ PYTHON := python3
 VENV := venv
 VENV_BIN := $(VENV)/bin
 PIP := $(VENV_BIN)/pip
+ENV_FILE := .env
+ENVIRONMENT := patient-appointments
 
-.PHONY: venv install-dependencies install-test-dependencies test test-unit test-e2e test-e2e-with-api test-features test-features-allure test-coverage run-api backup-db restore-db cleanup-db allure-report docs-report
+# Include .env files if they exist
+-include .env
+
+.PHONY: venv install-dependencies install-test-dependencies test test-unit test-e2e test-e2e-with-api test-features test-features-allure test-coverage run-api backup-db restore-db cleanup-db allure-report docs-report start-services stop-services migrate-sqlite-to-postgres
 
 # Create and activate virtual environment
 venv:
@@ -158,6 +163,25 @@ docs-report: allure-report
 	@cp allure-report/index.html docs/
 	@echo "Allure report copied to 'docs/index.html'"
 	@echo "You can now access the report at 'docs/index.html'"
+
+# Docker Services
+start-services:
+	@echo "Starting the Patient Appointment API services..."
+	@docker-compose -p $(ENVIRONMENT) --file ./infra/docker-compose.yml --env-file $(ENV_FILE) up -d --build
+	@echo "Services started successfully!"
+	@echo "API: http://localhost:$${API_PORT:-8000}"
+	@echo "PostgreSQL: localhost:$${POSTGRES_PORT:-5432}"
+
+stop-services:
+	@echo "Stopping the Patient Appointment API services..."
+	@docker-compose -p $(ENVIRONMENT) --file ./infra/docker-compose.yml --env-file $(ENV_FILE) down
+	@echo "Services stopped successfully!"
+
+migrate-sqlite-to-postgres:
+	@echo "Migrating SQLite data to PostgreSQL..."
+	@echo "Running migration script..."
+	@$(VENV_BIN)/python infra/migrate-sqlite-to-postgres.py
+	@echo "Migration completed successfully!"
 
 
 

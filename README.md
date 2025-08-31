@@ -4,20 +4,40 @@ A FastAPI-based API for managing patients and appointments.
 
 ## Getting Started
 
-1. Create environment configuration:
-   ```bash
-   cp .env.example .env
-   ```
+### Running Without Docker (Local Development)
 
-   Change the values as needed
-
-2. Install dependencies and run the API:
+1. **Install dependencies:**
    ```bash
    make install-dependencies
+   ```
+
+2. **Start the API:**
+   ```bash
    make run-api
    ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8000` using SQLite database.
+
+### Running With Docker 
+
+1. **Create environment file (optional):**
+   ```bash
+   cp env.example .env
+   # Edit .env with your preferred values
+   ```
+
+2. **Start services:**
+   ```bash
+   make start-services
+   ```
+
+3. **Migrate existing data (optional):**
+   ```bash
+   # If you have existing SQLite data to migrate
+   make migrate-sqlite-to-postgres
+   ```
+
+The API will be available at `http://localhost:8000` (or your configured `API_PORT`) using PostgreSQL database.
 
 ## Environment Variables
 
@@ -38,6 +58,14 @@ The following environment variables can be configured via a `.env` file in the p
 
 ### API Configuration
 - `API_HOST` - Host and port for API server (default: `0.0.0.0:8000`)
+
+### Docker Configuration extra variables
+- `POSTGRES_DB` - PostgreSQL database name 
+- `POSTGRES_USER` - PostgreSQL username 
+- `POSTGRES_PASSWORD` - PostgreSQL password 
+- `POSTGRES_PORT` - PostgreSQL host port mapping 
+- `API_PORT` - API host port mapping 
+- `POSTGRES_HOST` - Postgres host (default is localhost) and it is used only for the migration script of the test database 
 
 ## API Documentation
 
@@ -80,6 +108,26 @@ Interactive API documentation is available at:
 - **Background service** - Automatic startup of background tasks
 - **Validation** - Input validation for all API endpoints
 - **Error handling** - Structured error responses with detailed messages
+- **Database agnostic** - Works with any SQLAlchemy-supported relational database
+
+### Background Tasks in Action
+
+The API automatically processes overdue appointments every 5 minutes (configurable via `BACKGROUND_TASK_INTERVAL`). Here's an example of the background service working:
+
+```
+INFO:src.services.background_tasks:Background task service started (checking every 300 seconds)
+INFO:src.entrypoints.main:Background task service started successfully!
+INFO:     Application startup complete.
+INFO:     172.18.0.1:50468 - "GET /docs HTTP/1.1" 200 OK
+INFO:     172.18.0.1:33180 - "GET /appointments?limit=3 HTTP/1.1" 200 OK
+INFO:src.services.background_tasks:Marked 4 overdue appointments as missed
+INFO:src.services.background_tasks:  - Appointment 8932da00-a07d-44af-aec8-07f71a1746b5 (patient: 9434765838) marked as missed
+INFO:src.services.background_tasks:  - Appointment 520b3cd8-7ac8-4bad-8fd8-32c5e3fcda72 (patient: 6187159780) marked as missed
+INFO:src.services.background_tasks:  - Appointment da24e071-0019-4d40-92bc-366e48655612 (patient: 7973153918) marked as missed
+INFO:src.services.background_tasks:  - Appointment e5f5b062-3359-490f-954a-13d5b40a434e (patient: 8201217543) marked as missed
+```
+
+The background service automatically identifies appointments that are past their scheduled time and haven't been marked as attended, then updates their status to "missed" with detailed logging.
 
 ## Testing
 

@@ -50,4 +50,13 @@ Thumbs.db
 
 # Allure results
 allure-results/
+allure-report/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.dockerfile
+
+# PostgreSQL data
+postgres_data/
 
