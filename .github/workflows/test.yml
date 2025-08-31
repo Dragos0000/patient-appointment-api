@@ -1,0 +1,64 @@
+name: Tests
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    # - name: Create environment file
+    #   run: |
+    #     cp env.example .env
+    #     echo "Created .env file from template"
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y make
+        
+    - name: Install Python dependencies
+      run: |
+        make install-test-dependencies
+        
+    - name: Start services
+      run: |
+        make start-services
+        echo "Waiting for services to be ready..."
+        sleep 30
+        
+    - name: Verify services are running
+      run: |
+        docker ps
+        curl -f http://localhost:8000/health || exit 1
+        echo "Services are healthy"
+        
+    - name: Migrate SQLite data to PostgreSQL
+      run: |
+        make migrate-sqlite-to-postgres
+        echo "Data migration completed"
+        
+    - name: Run all tests
+      run: |
+        make test
+        
+    - name: Stop services
+      run: |
+        make stop-services
+        
+    - name: Cleanup Docker resources
+      run: |
+        docker system prune -f
+        docker volume prune -f
