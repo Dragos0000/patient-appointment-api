@@ -2,6 +2,8 @@
 
 A FastAPI-based API for managing patients and appointments.
 
+**Test Report:** [https://dragos0000.github.io/patient-appointment-api/](https://dragos0000.github.io/patient-appointment-api/)
+
 ## Getting Started
 
 ### Running Without Docker (Local Development)
