@@ -147,7 +147,7 @@ The project implements a clean architecture pattern with clear separation of con
   - `adapters/` - Database and external system interfaces
   - `entrypoints/` - API routes and HTTP handling
 - **Async/Await** - Asynchronous implementation 
-- **SQLAlchemy Core** - Database abstraction with async support, avoiding ORM complexity for better performance
+- **SQLAlchemy Core** - Database abstraction with async support
 
 
 
