@@ -19,10 +19,10 @@ jobs:
       with:
         python-version: '3.11'
         
-    # - name: Create environment file
-    #   run: |
-    #     cp env.example .env
-    #     echo "Created .env file from template"
+    - name: Create environment file
+      run: |
+        touch .env
+        echo "Created .env file"
         
     - name: Install system dependencies
       run: |
